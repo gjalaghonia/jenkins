@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+    parameters {
+        string(name: 'DOCKERHUB_USERNAME', defaultValue: '', description: 'DockerHub Username')
+        password(name: 'DOCKERHUB_PASSWORD', defaultValue: '', description: 'DockerHub Password')
+        choice(name: 'DOCKER_IMAGE_TAG', choices: ['v1', 'v2', 'v3', 'v4'], description: 'Choose the Docker image tag')
+    }
+    stages {
+        stage('Check and Install Docker') {
+            steps {
+                script {
+                    def dockerInstalled = sh(script: 'which docker', returnStatus: true) == 0
+                    if (!dockerInstalled) {
+                        sh '''
+                        echo "Docker not found. Installing Docker..."
+                        sudo apt-get update
+                        sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+                        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+                        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+                        sudo apt-get update
+                        sudo apt-get install -y docker-ce
+                        sudo usermod -aG docker $USER
+                        newgrp docker
+                        '''
+                    } else {
+                        echo "Docker is already installed."
+                    }
+                }
+            }
+        }
+        stage('Docker Login') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: '1', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
+                        sh 'echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin'
+                    }
+                }
+            }
+        }
+        stage('Pull and Test Image') {
+            parallel {
+                stage('Pull Image') {
+                    steps {
+                        script {
+                            sh 'whoami'
+                            sh "docker pull gjalaghonia/test000:${params.DOCKER_IMAGE_TAG}"
+                        }
+                    }
+                }
+                stage('Test Image') {
+                    steps {
+                        script {
+                            sh 'docker run hello-world'
+                        }
+                    }
+                }
+            }
+        }
+        stage('Additional Tasks') {
+            parallel {
+                stage('Task 1') {
+                    steps {
+                        script {
+                            // Add commands for Task 1
+                            sh 'echo "Running Task 1"'
+                        }
+                    }
+                }
+                stage('Task 2') {
+                    steps {
+                        script {
+                            // Add commands for Task 2
+                            sh 'echo "Running Task 2"'
+                        }
+                    }
+                }
+            }
+        }
+    }
+    post {
+        always {
+            script {
+                sh 'docker logout'
+            }
+        }
+    }
+}
