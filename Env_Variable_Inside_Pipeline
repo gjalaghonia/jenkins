@@ -1,0 +1,13 @@
+pipeline {
+    agent any
+    environment {
+        MY_VAR = 'Hello, World!'
+    }
+    stages {
+        stage('Print Env Variable') {
+            steps {
+                sh 'echo $MY_VAR'
+            }
+        }
+    }
+}
