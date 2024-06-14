@@ -1,0 +1,28 @@
+pipeline {
+    agent any
+    stages {
+        stage('Build') {
+            steps {
+                sh 'echo "Building project..."'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'echo "Running tests..."'
+            }
+        }
+        stage('Trigger Downstream Job') {
+            steps {
+                script {
+                    // Trigger another build
+                    build job: 'downstream-job', wait: true
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'echo "Deploying project..."'
+            }
+        }
+    }
+}

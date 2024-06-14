@@ -1,0 +1,15 @@
+pipeline {
+    agent any
+    stages {
+        stage('Initialize') {
+            steps {
+                sh 'echo "Downstream job triggered by upstream job..."'
+            }
+        }
+        stage('Process') {
+            steps {
+                sh 'echo "Processing downstream job..."'
+            }
+        }
+    }
+}
