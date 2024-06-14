@@ -1,0 +1,16 @@
+pipeline {
+    agent { label 'agent1' }
+    parameters {
+        string(name: 'MYLIST', defaultValue: '', description: 'A parameter from the upstream job')
+    }
+    stages {
+        stage('Process Parameter') {
+            steps {
+                script {
+                    echo "Received parameter: ${params.MYLIST}"
+                    // Add additional steps to process the parameter if needed
+                }
+            }
+        }
+    }
+}
